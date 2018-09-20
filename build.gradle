@@ -1,0 +1,49 @@
+buildscript {
+    ext {
+        springBootVersion = '2.0.3.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath 'org.springframework:springloaded:1.2.7.RELEASE'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.gradle.org/gradle/libs-releases-local/"
+    }
+}
+
+bootJar {
+    baseName = 'apppubs-pub'
+    version = '0.0.1'
+}
+
+configurations {
+    providedRuntime
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-test')
+    providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+    compile 'org.apache.commons:commons-lang3:3.0'
+    compile "org.springframework.boot:spring-boot-devtools"
+    compile 'org.gradle:gradle-tooling-api:4.10'
+    compile 'com.qiniu:qiniu-java-sdk:7.2.+'
+    compile 'com.baomidou:mybatis-plus:3.0.3'
+    compile 'mysql:mysql-connector-java:8.0.12'
+    compile 'org.apache.velocity:velocity:1.7'
+
+}

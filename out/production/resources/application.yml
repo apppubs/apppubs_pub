@@ -1,0 +1,72 @@
+#公共配置 
+spring:
+  profiles:
+    active: dev   
+  application:
+    name: api
+  datasource:
+    name: era
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    spring.datasource.filters: stat,wall,log4j
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+server:
+  port: 8090
+  contextPath: /
+  tomcat:
+    max-threads: 2000
+    min-spare-threads: 10
+    max-connections: 2000
+management:
+  security:
+    enabled: false
+logging:
+  file: logs/${spring.application.name}.log
+  level:
+    root: info
+mybatis:
+  mapperLocations: classpath:mapper/*Mapper.xml
+  typeAliasesPackage: com.heaven.huolinhe.model
+custom:
+  upload:
+    dir: upload
+    contextPath: upload/
+  avatar:
+    dir: user-avatar
+    contextPath: avatar/
+  android:
+    prebuildDir: /Users/siger/Developer/apppubs/apppubs-android/
+    projectDir: /Users/siger/Developer/apppubs/apppubs-android/apppubs-android/
+  qiniu:
+    accessKey: b_P-P5_--nAnU9opyjTJb37aYpkvt66Dq8aZH7nw
+    secretKey: mSVLjokAPleEttwgY79fxIrSPakVSMfn6rCCFwpf
+    bucket: apppubs
+---
+#开发环境
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
+    username: zhangwen
+    password: Heaven202
+    
+---
+#生产环境
+spring:
+  profiles: prod
+  datasource:
+    url: jdbc:mysql://rm-2zebcg09f8w62jf39.mysql.rds.aliyuncs.com:3306/huolinhe_party_build?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true
+    username: zhangwen
+    password: Heaven202
