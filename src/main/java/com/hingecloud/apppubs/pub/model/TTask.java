@@ -1,43 +1,61 @@
 package com.hingecloud.apppubs.pub.model;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+
+import com.baomidou.mybatisplus.annotations.TableField;
+import com.baomidou.mybatisplus.annotations.TableId;
+import com.baomidou.mybatisplus.annotations.TableName;
+import com.baomidou.mybatisplus.enums.IdType;
 
 import java.io.Serializable;
+
 /**
  * <p>
- *  实体类
+ * 实体类
  * </p>
  *
  * @author 张稳
- * @since 2018-09-20 
+ * @since 2018-09-20
  */
 @TableName("task")
 public class TTask implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static final int STATUS_WAITING = 0;
+    public static final int STATUS_BUILDING = 1;
+    public static final int STATUS_SUCCESS = 2;
+    public static final int STATUS_FAIL = 3;
+
+    public static final String TYPE_ANDROID = "android";
+    public static final String TYPE_IOS = "ios";
+
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-    @TableField("appId")
+    @TableField("app_id")
     private String appId;
-    @TableField("packageName")
+    @TableField("package_name")
     private String packageName;
-    @TableField("appName")
+    @TableField("app_name")
     private String appName;
-    @TableField("baseURL")
+    @TableField("base_url")
     private String baseURL;
     private String type;
-    @TableField("versionName")
+    @TableField("version_name")
     private String versionName;
-    @TableField("wxAppId")
+    @TableField("version_code")
+    private Integer versionCode;
+    @TableField("wx_app_id")
     private String wxAppId;
-    @TableField("jpushAppId")
+    @TableField("jpush_app_id")
     private String jpushAppId;
     private String assets;
-    @TableField("enableSplashSkip")
+    @TableField("enable_splash_skip")
     private Integer enableSplashSkip;
-    @TableField("enableStartUpVersion")
+    @TableField("enable_start_up_version")
     private Integer enableStartUpVersion;
+    private Integer status = STATUS_WAITING;
+    @TableField("download_url")
+    private String downloadURL;
     private String reserve1;
     private String reserve2;
     private String reserve3;
@@ -101,6 +119,14 @@ public class TTask implements Serializable {
         this.versionName = versionName;
     }
 
+    public Integer getVersionCode() {
+        return versionCode;
+    }
+
+    public void setVersionCode(Integer versionCode) {
+        this.versionCode = versionCode;
+    }
+
     public String getWxAppId() {
         return wxAppId;
     }
@@ -139,6 +165,22 @@ public class TTask implements Serializable {
 
     public void setEnableStartUpVersion(Integer enableStartUpVersion) {
         this.enableStartUpVersion = enableStartUpVersion;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public String getDownloadURL() {
+        return downloadURL;
+    }
+
+    public void setDownloadURL(String downloadURL) {
+        this.downloadURL = downloadURL;
     }
 
     public String getReserve1() {
@@ -184,23 +226,23 @@ public class TTask implements Serializable {
     @Override
     public String toString() {
         return "Task{" +
-            "id=" + id +
-            ", appId=" + appId +
-            ", packageName=" + packageName +
-            ", appName=" + appName +
-            ", baseURL=" + baseURL +
-            ", type=" + type +
-            ", versionName=" + versionName +
-            ", wxAppId=" + wxAppId +
-            ", jpushAppId=" + jpushAppId +
-            ", assets=" + assets +
-            ", enableSplashSkip=" + enableSplashSkip +
-            ", enableStartUpVersion=" + enableStartUpVersion +
-            ", reserve1=" + reserve1 +
-            ", reserve2=" + reserve2 +
-            ", reserve3=" + reserve3 +
-            ", reserve4=" + reserve4 +
-            ", reserve5=" + reserve5 +
-            "}";
+                "id=" + id +
+                ", appId=" + appId +
+                ", packageName=" + packageName +
+                ", appName=" + appName +
+                ", baseURL=" + baseURL +
+                ", type=" + type +
+                ", versionName=" + versionName +
+                ", wxAppId=" + wxAppId +
+                ", jpushAppId=" + jpushAppId +
+                ", assets=" + assets +
+                ", enableSplashSkip=" + enableSplashSkip +
+                ", enableStartUpVersion=" + enableStartUpVersion +
+                ", reserve1=" + reserve1 +
+                ", reserve2=" + reserve2 +
+                ", reserve3=" + reserve3 +
+                ", reserve4=" + reserve4 +
+                ", reserve5=" + reserve5 +
+                "}";
     }
 }

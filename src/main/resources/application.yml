@@ -1,7 +1,7 @@
 #公共配置 
 spring:
   profiles:
-    active: dev   
+    active: prod
   application:
     name: api
   datasource:
@@ -37,8 +37,21 @@ logging:
   level:
     root: info
 mybatis:
-  mapperLocations: classpath:mapper/*Mapper.xml
-  typeAliasesPackage: com.heaven.huolinhe.model
+  mapperLocations: classpath:mapper/*.xml
+  typeAliasesPackage: com.hingecloud.apppubs.pub.model
+
+---
+#开发环境
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
+    username: zhangwen
+    password: Heaven202
+  servlet:
+    multipart:
+      max-file-size: 20MB
+
 custom:
   upload:
     dir: upload
@@ -49,24 +62,36 @@ custom:
   android:
     prebuildDir: /Users/siger/Developer/apppubs/apppubs-android/
     projectDir: /Users/siger/Developer/apppubs/apppubs-android/apppubs-android/
+    resultPath: /Users/siger/Developer/apppubs/apppubs-android/apppubs-android/mportal/build/outputs/apk/release/mportal-release.apk
   qiniu:
     accessKey: b_P-P5_--nAnU9opyjTJb37aYpkvt66Dq8aZH7nw
     secretKey: mSVLjokAPleEttwgY79fxIrSPakVSMfn6rCCFwpf
     bucket: apppubs
----
-#开发环境
-spring:
-  profiles: dev
-  datasource:
-    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
-    username: zhangwen
-    password: Heaven202
-    
+
 ---
 #生产环境
 spring:
   profiles: prod
   datasource:
-    url: jdbc:mysql://rm-2zebcg09f8w62jf39.mysql.rds.aliyuncs.com:3306/huolinhe_party_build?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true
+    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true
     username: zhangwen
     password: Heaven202
+  servlet:
+      multipart:
+        max-file-size: 20MB
+
+custom:
+  upload:
+    dir: upload1
+    contextPath: upload/
+  avatar:
+    dir: user-avatar
+    contextPath: avatar/
+  android:
+    prebuildDir: /Users/siger/Developer/apppubs/apppubs-android/
+    projectDir: /Users/siger/Developer/apppubs/apppubs-android/apppubs-android/
+    resultPath: /Users/siger/Developer/apppubs/apppubs-android/apppubs-android/mportal/build/outputs/apk/release/mportal-release.apk
+  qiniu:
+    accessKey: b_P-P5_--nAnU9opyjTJb37aYpkvt66Dq8aZH7nw
+    secretKey: mSVLjokAPleEttwgY79fxIrSPakVSMfn6rCCFwpf
+    bucket: apppubs

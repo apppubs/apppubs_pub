@@ -41,9 +41,17 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.0'
     compile "org.springframework.boot:spring-boot-devtools"
     compile 'org.gradle:gradle-tooling-api:4.10'
-    compile 'com.qiniu:qiniu-java-sdk:7.2.+'
-    compile 'com.baomidou:mybatis-plus:3.0.3'
+    /* mysql */
     compile 'mysql:mysql-connector-java:8.0.12'
+    /* 七牛 */
+    compile 'com.qiniu:qiniu-java-sdk:7.2.+'
+    /* velocity */
     compile 'org.apache.velocity:velocity:1.7'
-
+    /* mybatisplus */
+    compile 'com.baomidou:mybatis-plus:2.1+'
+    compile 'org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.0'
+    /* druid */;
+    compile 'com.alibaba:druid:1.1.11'
+    /* fastjson */
+    compile 'com.alibaba:fastjson:1.2.49'
 }

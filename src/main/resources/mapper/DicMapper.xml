@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hingecloud.apppubs.pub.mapper.DicMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.hingecloud.apppubs.pub.model.TDic">
+        <id column="id" property="id" />
+        <result column="type" property="type" />
+        <result column="value" property="value" />
+        <result column="reserve1" property="reserve1" />
+        <result column="reserve2" property="reserve2" />
+        <result column="reserve3" property="reserve3" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, type, value, reserve1, reserve2, reserve3
+    </sql>
+
+</mapper>

@@ -31,4 +31,9 @@ public final class CodeConst {
 	 */
 	public static final int ILLEGAL_ARGUMENT = 4002;
 
+	/**
+	 * 创建编译任务失败
+	 */
+	public static final int TASK_CREATE_ERROR = 5001;
+
 }
