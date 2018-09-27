@@ -54,4 +54,5 @@ dependencies {
     compile 'com.alibaba:druid:1.1.11'
     /* fastjson */
     compile 'com.alibaba:fastjson:1.2.49'
+    compile fileTree(dir:'libs',include:['*.jar'])
 }

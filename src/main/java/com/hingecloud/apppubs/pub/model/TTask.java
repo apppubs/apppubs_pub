@@ -25,6 +25,7 @@ public class TTask implements Serializable {
     public static final int STATUS_BUILDING = 1;
     public static final int STATUS_SUCCESS = 2;
     public static final int STATUS_FAIL = 3;
+    public static final int STATUS_CANCEL = 4;
 
     public static final String TYPE_ANDROID = "android";
     public static final String TYPE_IOS = "ios";

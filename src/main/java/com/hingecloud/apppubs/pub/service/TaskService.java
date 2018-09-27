@@ -3,6 +3,7 @@ package com.hingecloud.apppubs.pub.service;
 import com.baomidou.mybatisplus.service.IService;
 import com.hingecloud.apppubs.pub.exception.CreateTaskException;
 import com.hingecloud.apppubs.pub.model.TTask;
+import com.hingecloud.apppubs.pub.model.dto.CancelTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CheckTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CreateTaskDTO;
 import com.hingecloud.apppubs.pub.model.vo.CheckTaskVO;
@@ -25,4 +26,7 @@ public interface TaskService extends IService<TTask> {
     CreateTaskVO addTask(CreateTaskDTO dto) throws CreateTaskException;
 
     CheckTaskVO checkTask(CheckTaskDTO dto);
+
+    void cancelTask(CancelTaskDTO dto);
+
 }

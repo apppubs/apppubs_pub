@@ -12,6 +12,7 @@ import com.hingecloud.apppubs.pub.mapper.TaskMapper;
 import com.hingecloud.apppubs.pub.model.TDic;
 import com.hingecloud.apppubs.pub.model.TTask;
 import com.hingecloud.apppubs.pub.model.config.BuildData;
+import com.hingecloud.apppubs.pub.model.dto.CancelTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CheckTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CreateTaskDTO;
 import com.hingecloud.apppubs.pub.model.vo.CheckTaskVO;
@@ -112,9 +113,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             task.setJpushAppId(dto.getJpushAppId());
             task.setAssets(assetsPath);
             task.setVersionCode(latestVersionCode);
-
             baseMapper.add(task);
-
             if (!mTaskQueue.offer(task)) {
                 throw new CreateTaskException("编译队列已满，请稍后再试！");
             } else {
@@ -185,12 +184,16 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                     createConfigFile(task);
                     buildProject(prebuildDir, "resolveSource");
                     buildProject(androidProjectDir, "packageRelease");
-                    String apkPath = task.getAppId() + "/v" + task.getVersionName() + "(" + task.getVersionCode() + ")" + ".apk";
-                    uploadFile(androidResultPath, apkPath);
-                    changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_SUCCESS);
+
                     TTask t = baseMapper.selectById(task.getId());
-                    t.setDownloadURL("http://qiniu.apppubs.com/"+apkPath);
-                    baseMapper.updateById(t);
+                    if (t.getStatus()!=TTask.STATUS_CANCEL){
+                        String apkPath = task.getAppId() + "/v" + task.getVersionName() + "(" + task.getVersionCode() + ")" + ".apk";
+                        uploadFile(androidResultPath, apkPath);
+                        changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_SUCCESS);
+                        t.setDownloadURL("http://qiniu.apppubs.com/"+apkPath);
+                        baseMapper.updateById(t);
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_FAIL);
@@ -289,6 +292,19 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         }
         vo.setStatus(statusStr);
         return vo;
+    }
+
+    @Override
+    public void cancelTask(CancelTaskDTO dto) {
+        for(TTask task:mTaskQueue){
+            if (dto.getTaskId().equals(task.getAppId())){
+                mTaskQueue.remove(task);
+                break;
+            }
+        }
+        TTask task = baseMapper.selectById(dto.getTaskId());
+        task.setStatus(TTask.STATUS_CANCEL);
+        baseMapper.updateById(task);
     }
 
 }
