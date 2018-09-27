@@ -41,10 +41,6 @@
         LIMIT 1
     </select>
 
-    <select id="updateStatus">
-        update task set status = #{status} where app_id = #{appId} and type = #{type} and version_code = #{versionCode}
-    </select>
-
     <!--@TableId(value = "id", type = IdType.AUTO)-->
     <!--private Integer id;-->
     <!--@TableField("app_id")-->

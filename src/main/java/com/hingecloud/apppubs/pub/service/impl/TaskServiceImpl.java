@@ -177,7 +177,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                 }
                 logger.info("正在处理" + task.getAppId());
 
-                changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_BUILDING);
+                changeTaskStatus(task.getId(), TTask.STATUS_BUILDING);
                 try {
                     cleanInputDir();
                     moveAssets(task.getAssets());
@@ -186,17 +186,17 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                     buildProject(androidProjectDir, "packageRelease");
 
                     TTask t = baseMapper.selectById(task.getId());
-                    if (t.getStatus()!=TTask.STATUS_CANCEL){
+                    if (t.getStatus() != TTask.STATUS_CANCEL) {
                         String apkPath = task.getAppId() + "/v" + task.getVersionName() + "(" + task.getVersionCode() + ")" + ".apk";
                         uploadFile(androidResultPath, apkPath);
-                        changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_SUCCESS);
-                        t.setDownloadURL("http://qiniu.apppubs.com/"+apkPath);
+                        t.setDownloadURL("http://qiniu.apppubs.com/" + apkPath);
+                        t.setStatus(TTask.STATUS_SUCCESS);
                         baseMapper.updateById(t);
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    changeTaskStatus(task.getAppId(), task.getType(), task.getVersionCode(), TTask.STATUS_FAIL);
+                    changeTaskStatus(task.getId(), TTask.STATUS_FAIL);
                 }
             }
         }
@@ -225,8 +225,10 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         }
     }
 
-    private void changeTaskStatus(String appId, String type, int versionCode, int status) {
-        baseMapper.updateStatus(appId, type, versionCode, status);
+    private void changeTaskStatus(int id, int status) {
+        TTask task = baseMapper.selectById(id);
+        task.setStatus(status);
+        baseMapper.updateById(task);
     }
 
     private String buildFilename(String originalFilename) {
@@ -287,6 +289,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             statusStr = "done";
         } else if (task.getStatus() == 3) {
             statusStr = "failed";
+        } else if (task.getStatus() == 4) {
+            statusStr = "canceled";
         } else {
             statusStr = "waiting";
         }
@@ -296,8 +300,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
     @Override
     public void cancelTask(CancelTaskDTO dto) {
-        for(TTask task:mTaskQueue){
-            if (dto.getTaskId().equals(task.getAppId())){
+        for (TTask task : mTaskQueue) {
+            if (dto.getTaskId().equals(task.getAppId())) {
                 mTaskQueue.remove(task);
                 break;
             }

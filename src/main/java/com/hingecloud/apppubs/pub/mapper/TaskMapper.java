@@ -16,8 +16,6 @@ public interface TaskMapper extends BaseMapper<TTask> {
 
     public Integer selectLatestVersionCode(@Param("appId") String appId, @Param("type") String type);
 
-    public void updateStatus(@Param("appId") String appId, @Param("type") String type, @Param("versionCode") Integer versionCode, @Param("status") Integer status);
-
     public Integer add(TTask task);
 
 }
