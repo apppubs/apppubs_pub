@@ -1,6 +1,6 @@
 package com.hingecloud.apppubs.pub.exception;
 
-public class CreateTaskException extends Exception {
+public class CreateTaskException extends RuntimeException {
 
     CreateTaskException() {
         super();

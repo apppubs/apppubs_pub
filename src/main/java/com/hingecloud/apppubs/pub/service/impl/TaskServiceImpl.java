@@ -28,6 +28,7 @@ import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -35,12 +36,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,7 +109,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             task.setAppId(dto.getAppId());
             task.setPackageName(dto.getPackageName());
             task.setAppName(dto.getAppName());
-            task.setBaseURL(dto.getBaseURL());
+            task.setBaseUrl(dto.getBaseURL());
             task.setType(dto.getType());
             task.setVersionName(dto.getVersionName());
             task.setWxAppId(dto.getWxAppId());
@@ -161,6 +164,13 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
     @PostConstruct
     private void startTaskResolver() {
         logger.info("打开任务处理器");
+        //装载未处理完成的编译任务
+        Wrapper<TTask> wrapper = new EntityWrapper<TTask>();
+        wrapper.le("status", TTask.STATUS_BUILDING);
+        List<TTask> listTask = baseMapper.selectList(wrapper);
+        if (listTask.size() > 0) {
+            mTaskQueue.addAll(listTask);
+        }
         new Thread(new TaskResolver()).start();
     }
 
@@ -180,6 +190,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                 changeTaskStatus(task.getId(), TTask.STATUS_BUILDING);
                 try {
                     cleanInputDir();
+                    moveBuildFile();
                     moveAssets(task.getAssets());
                     createConfigFile(task);
                     buildProject(prebuildDir, "resolveSource");
@@ -187,16 +198,20 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
                     TTask t = baseMapper.selectById(task.getId());
                     if (t.getStatus() != TTask.STATUS_CANCEL) {
-                        String apkPath = task.getAppId() + "/v" + task.getVersionName() + "(" + task.getVersionCode() + ")" + ".apk";
+                        String apkPath = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".apk";
                         uploadFile(androidResultPath, apkPath);
-                        t.setDownloadURL("http://qiniu.apppubs.com/" + apkPath);
+                        t.setDownloadUrl("http://qiniu.apppubs.com/" + apkPath);
                         t.setStatus(TTask.STATUS_SUCCESS);
                         baseMapper.updateById(t);
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    changeTaskStatus(task.getId(), TTask.STATUS_FAIL);
+                    logger.error("{}", ExceptionUtils.getMessage(e), e);
+                    TTask task1 = baseMapper.selectById(task.getId());
+                    task1.setStatus(TTask.STATUS_FAIL);
+                    task1.setReserve5(ExceptionUtils.getMessage(e));
+                    baseMapper.updateById(task1);
                 }
             }
         }
@@ -205,23 +220,22 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             FileHelper.delFolder(Paths.get(prebuildDir, "input").toString());
         }
 
-        private void createConfigFile(TTask task) {
+        private void moveBuildFile() throws IOException {
+            InputStream io = Thread.currentThread().getContextClassLoader().getResourceAsStream("android/build.gradle");
+
+//            File file = new ClassPathResource("android/build.gradle").getFile();
+            Files.copy(io, Paths.get(prebuildDir,"build.gradle"), StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        private void createConfigFile(TTask task) throws IOException {
             BuildData data = BuildData.createFromTask(task);
             String jsonStr = JSON.toJSONString(data);
             ByteInputStream bis = new ByteInputStream(jsonStr.getBytes(), 0, jsonStr.getBytes().length);
-            try {
-                Files.copy(bis, Paths.get(prebuildDir, "input", "config.json"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Files.copy(bis, Paths.get(prebuildDir, "input", "config.json"));
         }
 
-        private void moveAssets(String assetsPath) {
-            try {
-                FileHelper.decompressZip(new File(assetsPath), Paths.get(prebuildDir, "input").toString());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        private void moveAssets(String assetsPath) throws IOException {
+            FileHelper.decompressZip(new File(assetsPath), Paths.get(prebuildDir, "input").toString());
         }
     }
 
@@ -236,39 +250,36 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         return UUID.randomUUID().toString().replaceAll("-", "") + suffix;
     }
 
-    public boolean buildProject(String buildPath, String... tasks) {
+    public boolean buildProject(String buildPath, String... tasks) throws Exception {
         File buildFile = new File(buildPath);
         GradleConnector connector = GradleConnector.newConnector();
         connector.forProjectDirectory(buildFile);
         ProjectConnection connection = connector.connect();
         BuildLauncher build = connection.newBuild();
         build.forTasks(tasks);
+        build.setStandardOutput(System.out);
         try {
             build.run();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new Exception(e.getMessage());
         } finally {
             connection.close();
         }
         return true;
     }
 
-    private void uploadFile(String localFilePath, String key) {
+    private void uploadFile(String localFilePath, String key) throws QiniuException {
         Configuration cfg = new Configuration(Zone.zone0());
         UploadManager uploadManager = new UploadManager(cfg);
 
         //默认不指定key的情况下，以文件内容的hash值作为文件名
         String upToken = getAccessToken();
-        try {
-            Response response = uploadManager.put(localFilePath, key, upToken);
-            //解析上传成功的结果
-            DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
-            System.out.println(putRet.key);
-            System.out.println(putRet.hash);
-        } catch (QiniuException ex) {
-            Response r = ex.response;
-            ex.printStackTrace();
-        }
+        Response response = uploadManager.put(localFilePath, key, upToken);
+        //解析上传成功的结果
+        DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+        System.out.println(putRet.key);
+        System.out.println(putRet.hash);
     }
 
     private String getAccessToken() {
@@ -281,7 +292,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
     public CheckTaskVO checkTask(CheckTaskDTO dto) {
         TTask task = baseMapper.selectById(dto.getTaskId());
         CheckTaskVO vo = new CheckTaskVO();
-        vo.setDownloadURL(task.getDownloadURL());
+        vo.setDownloadURL(task.getDownloadUrl());
         String statusStr = "";
         if (task.getStatus() == 1) {
             statusStr = "building";
@@ -295,6 +306,10 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             statusStr = "waiting";
         }
         vo.setStatus(statusStr);
+
+        if ("failed".equals(statusStr)) {
+            vo.setErrMsg(task.getReserve5());
+        }
         return vo;
     }
 
@@ -310,5 +325,4 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         task.setStatus(TTask.STATUS_CANCEL);
         baseMapper.updateById(task);
     }
-
 }

@@ -13,17 +13,20 @@ public class CreateTaskDTO extends AbsDTO {
     private String versionName;
     private String wxAppId;
     private String jpushAppId;
+    private String storePassword;
+    private String keyAlias;
+    private String keyPassword;
     private MultipartFile assets;
 
     @Override
     public void validate() {
         ValidateHelper.notNull(getPackageName(), "packageName为空!");
         ValidateHelper.notNull(getAppName(), "appName为空！");
-        ValidateHelper.notNull(getAppId(),"appId为空！");
-        ValidateHelper.notNull(getBaseURL(),"baseURL为空！");
-        ValidateHelper.notNull(getType(),"type为空！");
-        ValidateHelper.notNull(getVersionName(),"versionName为空！");
-        ValidateHelper.notNull(getAssets(),"assets为空！");
+        ValidateHelper.notNull(getAppId(), "appId为空！");
+        ValidateHelper.notNull(getBaseURL(), "baseURL为空！");
+        ValidateHelper.notNull(getType(), "type为空！");
+        ValidateHelper.notNull(getVersionName(), "versionName为空！");
+        ValidateHelper.notNull(getAssets(), "assets为空！");
     }
 
     public String getPackageName() {
@@ -96,5 +99,29 @@ public class CreateTaskDTO extends AbsDTO {
 
     public void setAssets(MultipartFile assets) {
         this.assets = assets;
+    }
+
+    public String getStorePassword() {
+        return storePassword;
+    }
+
+    public void setStorePassword(String storePassword) {
+        this.storePassword = storePassword;
+    }
+
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public void setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
     }
 }

@@ -12,17 +12,23 @@ public class BuildData {
     private String jpushAppKey;
     private String versionName;
     private String versionCode;
+    private String storePassword;
+    private String keyAlias;
+    private String keyPassword;
 
     public static BuildData createFromTask(TTask task) {
         BuildData data = new BuildData();
         data.setPackageName(task.getPackageName());
         data.setAppName(task.getAppName());
-        data.setWxAppId(StringUtil.getString(task.getWxAppId(),""));
+        data.setWxAppId(StringUtil.getString(task.getWxAppId(), ""));
         data.setAppId(task.getAppId());
-        data.setBaseURL(task.getBaseURL());
-        data.setJpushAppKey(StringUtil.getString(task.getJpushAppId(),""));
+        data.setBaseURL(task.getBaseUrl());
+        data.setJpushAppKey(StringUtil.getString(task.getJpushAppId(), ""));
         data.setVersionName(task.getVersionName());
         data.setVersionCode(task.getVersionCode() + "");
+        data.setStorePassword(task.getStorePassword());
+        data.setKeyAlias(task.getKeyAlias());
+        data.setKeyPassword(task.getKeyPassword());
         return data;
     }
 
@@ -88,5 +94,29 @@ public class BuildData {
 
     public void setVersionCode(String versionCode) {
         this.versionCode = versionCode;
+    }
+
+    public String getStorePassword() {
+        return storePassword;
+    }
+
+    public void setStorePassword(String storePassword) {
+        this.storePassword = storePassword;
+    }
+
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public void setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
     }
 }

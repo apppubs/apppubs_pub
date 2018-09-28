@@ -1,5 +1,7 @@
 package com.hingecloud.apppubs.pub.exception;
 
+import com.hingecloud.apppubs.pub.model.vo.CreateTaskVO;
+import com.hingecloud.apppubs.pub.tools.CodeConst;
 import com.hingecloud.apppubs.pub.tools.JsonResult;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -31,11 +33,11 @@ public class GlobalExceptionHandler {
             logger.info("{}", ExceptionUtils.getMessage(ex));
             return JsonResult.failure(HttpStatus.UNSUPPORTED_MEDIA_TYPE.toString(),
                     String.format("不支持的ContentType[%s]", ((HttpMediaTypeNotSupportedException) ex).getContentType()));
-        } else if (ex instanceof RuntimeException) {
-            return JsonResult.generic(ex.getMessage());
+        } else if (ex instanceof CreateTaskException) {
+            return JsonResult.failure(CodeConst.TASK_CREATE_ERROR, ex.getMessage());
         } else {
             logger.error("{}", ExceptionUtils.getMessage(ex), ex);
-            return JsonResult.generic();
+            return JsonResult.generic(ex.getMessage());
         }
     }
 

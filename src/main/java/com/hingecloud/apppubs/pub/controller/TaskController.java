@@ -24,13 +24,8 @@ public class TaskController {
     @ResponseBody
     public JsonResult addTask(CreateTaskDTO dto) {
         dto.validate();
-        try {
-            CreateTaskVO vo = mTaskService.addTask(dto);
-            return JsonResult.success(vo,"任务添加成功！");
-        } catch (CreateTaskException e) {
-            e.printStackTrace();
-            return JsonResult.failure(CodeConst.TASK_CREATE_ERROR,e.getMessage());
-        }
+        CreateTaskVO vo = mTaskService.addTask(dto);
+        return JsonResult.success(vo,"任务添加成功！");
     }
 
     @PostMapping(value="check")

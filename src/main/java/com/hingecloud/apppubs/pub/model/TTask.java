@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.IdType;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -30,7 +31,8 @@ public class TTask implements Serializable {
     public static final String TYPE_ANDROID = "android";
     public static final String TYPE_IOS = "ios";
 
-    @TableId(value = "id", type = IdType.AUTO)
+
+    @TableId(value="id", type= IdType.AUTO)
     private Integer id;
     @TableField("app_id")
     private String appId;
@@ -39,7 +41,7 @@ public class TTask implements Serializable {
     @TableField("app_name")
     private String appName;
     @TableField("base_url")
-    private String baseURL;
+    private String baseUrl;
     private String type;
     @TableField("version_name")
     private String versionName;
@@ -54,9 +56,18 @@ public class TTask implements Serializable {
     private Integer enableSplashSkip;
     @TableField("enable_start_up_version")
     private Integer enableStartUpVersion;
-    private Integer status = STATUS_WAITING;
+    private Integer status;
+    @TableField("create_time")
+    private Date createTime;
     @TableField("download_url")
-    private String downloadURL;
+    private String downloadUrl;
+    @TableField("store_password")
+    private String storePassword;
+    @TableField("key_alias")
+    private String keyAlias;
+    @TableField("key_password")
+    private String keyPassword;
+    private String note;
     private String reserve1;
     private String reserve2;
     private String reserve3;
@@ -96,12 +107,12 @@ public class TTask implements Serializable {
         this.appName = appName;
     }
 
-    public String getBaseURL() {
-        return baseURL;
+    public String getBaseUrl() {
+        return baseUrl;
     }
 
-    public void setBaseURL(String baseURL) {
-        this.baseURL = baseURL;
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
     }
 
     public String getType() {
@@ -176,12 +187,52 @@ public class TTask implements Serializable {
         this.status = status;
     }
 
-    public String getDownloadURL() {
-        return downloadURL;
+    public Date getCreateTime() {
+        return createTime;
     }
 
-    public void setDownloadURL(String downloadURL) {
-        this.downloadURL = downloadURL;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public String getDownloadUrl() {
+        return downloadUrl;
+    }
+
+    public void setDownloadUrl(String downloadUrl) {
+        this.downloadUrl = downloadUrl;
+    }
+
+    public String getStorePassword() {
+        return storePassword;
+    }
+
+    public void setStorePassword(String storePassword) {
+        this.storePassword = storePassword;
+    }
+
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public void setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public String getReserve1() {
@@ -227,18 +278,26 @@ public class TTask implements Serializable {
     @Override
     public String toString() {
         return "Task{" +
-                "id=" + id +
+                ", id=" + id +
                 ", appId=" + appId +
                 ", packageName=" + packageName +
                 ", appName=" + appName +
-                ", baseURL=" + baseURL +
+                ", baseUrl=" + baseUrl +
                 ", type=" + type +
                 ", versionName=" + versionName +
+                ", versionCode=" + versionCode +
                 ", wxAppId=" + wxAppId +
                 ", jpushAppId=" + jpushAppId +
                 ", assets=" + assets +
                 ", enableSplashSkip=" + enableSplashSkip +
                 ", enableStartUpVersion=" + enableStartUpVersion +
+                ", status=" + status +
+                ", createTime=" + createTime +
+                ", downloadUrl=" + downloadUrl +
+                ", storePassword=" + storePassword +
+                ", keyAlias=" + keyAlias +
+                ", keyPassword=" + keyPassword +
+                ", note=" + note +
                 ", reserve1=" + reserve1 +
                 ", reserve2=" + reserve2 +
                 ", reserve3=" + reserve3 +
