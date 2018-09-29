@@ -69,8 +69,8 @@
 
     <insert id="add" keyProperty="id" useGeneratedKeys="true" parameterType="TTask">
         insert into task
-            (app_id,package_name,app_name,base_url,type,version_name,version_code,wx_app_id,jpush_app_id,assets,enable_splash_skip,enable_start_up_version,status)
+            (app_id,package_name,app_name,base_url,type,version_name,version_code,wx_app_id,jpush_app_id,assets,enable_splash_skip,enable_start_up_version,status,store_password,key_alias,key_password,reserve1)
         values
-            (#{appId},#{packageName},#{appName},#{baseUrl},#{type},#{versionName},#{versionCode},#{wxAppId},#{jpushAppId},#{assets},#{enableSplashSkip},#{enableStartUpVersion},#{status})
+            (#{appId},#{packageName},#{appName},#{baseUrl},#{type},#{versionName},#{versionCode},#{wxAppId},#{jpushAppId},#{assets},#{enableSplashSkip},#{enableStartUpVersion},#{status},#{storePassword},#{keyAlias},#{keyPassword},#{reserve1})
     </insert>
 </mapper>

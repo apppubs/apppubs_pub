@@ -56,7 +56,7 @@ public class TTask implements Serializable {
     private Integer enableSplashSkip;
     @TableField("enable_start_up_version")
     private Integer enableStartUpVersion;
-    private Integer status;
+    private Integer status = STATUS_WAITING;
     @TableField("create_time")
     private Date createTime;
     @TableField("download_url")
@@ -304,5 +304,21 @@ public class TTask implements Serializable {
                 ", reserve4=" + reserve4 +
                 ", reserve5=" + reserve5 +
                 "}";
+    }
+
+    public String getStatusStr(){
+        String statusStr = "";
+        if (getStatus() == 1) {
+            statusStr = "building";
+        } else if (getStatus() == 2) {
+            statusStr = "done";
+        } else if (getStatus() == 3) {
+            statusStr = "failed";
+        } else if (getStatus() == 4) {
+            statusStr = "canceled";
+        } else {
+            statusStr = "waiting";
+        }
+        return statusStr;
     }
 }

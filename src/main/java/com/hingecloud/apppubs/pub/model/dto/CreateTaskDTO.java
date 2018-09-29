@@ -16,6 +16,7 @@ public class CreateTaskDTO extends AbsDTO {
     private String storePassword;
     private String keyAlias;
     private String keyPassword;
+    private String callback;
     private MultipartFile assets;
 
     @Override
@@ -27,6 +28,7 @@ public class CreateTaskDTO extends AbsDTO {
         ValidateHelper.notNull(getType(), "type为空！");
         ValidateHelper.notNull(getVersionName(), "versionName为空！");
         ValidateHelper.notNull(getAssets(), "assets为空！");
+        ValidateHelper.notNull(getCallback(),"callback为空！");
     }
 
     public String getPackageName() {
@@ -123,5 +125,13 @@ public class CreateTaskDTO extends AbsDTO {
 
     public void setKeyPassword(String keyPassword) {
         this.keyPassword = keyPassword;
+    }
+
+    public String getCallback() {
+        return callback;
+    }
+
+    public void setCallback(String callback) {
+        this.callback = callback;
     }
 }

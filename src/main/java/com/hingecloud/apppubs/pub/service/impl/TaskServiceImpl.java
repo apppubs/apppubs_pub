@@ -20,6 +20,7 @@ import com.hingecloud.apppubs.pub.model.vo.CreateTaskVO;
 import com.hingecloud.apppubs.pub.service.TaskService;
 import com.hingecloud.apppubs.pub.utils.DateUtil;
 import com.hingecloud.apppubs.pub.utils.FileHelper;
+import com.hingecloud.apppubs.pub.utils.HttpUtil;
 import com.qiniu.common.QiniuException;
 import com.qiniu.common.Zone;
 import com.qiniu.http.Response;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,7 +48,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -114,8 +116,12 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             task.setVersionName(dto.getVersionName());
             task.setWxAppId(dto.getWxAppId());
             task.setJpushAppId(dto.getJpushAppId());
+            task.setStorePassword(dto.getStorePassword());
+            task.setKeyAlias(dto.getKeyAlias());
+            task.setKeyPassword(dto.getKeyPassword());
             task.setAssets(assetsPath);
             task.setVersionCode(latestVersionCode);
+            task.setReserve1(dto.getCallback());
             baseMapper.add(task);
             if (!mTaskQueue.offer(task)) {
                 throw new CreateTaskException("编译队列已满，请稍后再试！");
@@ -164,6 +170,13 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
     @PostConstruct
     private void startTaskResolver() {
         logger.info("打开任务处理器");
+        //cleanup android项目
+        try {
+            buildProject(androidProjectDir, "clean");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         //装载未处理完成的编译任务
         Wrapper<TTask> wrapper = new EntityWrapper<TTask>();
         wrapper.le("status", TTask.STATUS_BUILDING);
@@ -186,8 +199,10 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                     e.printStackTrace();
                 }
                 logger.info("正在处理" + task.getAppId());
-
+                task.setStatus(TTask.STATUS_BUILDING);
                 changeTaskStatus(task.getId(), TTask.STATUS_BUILDING);
+
+                notifyCallback(task.getReserve1(), task.getId(), task.getStatusStr(), "", "");
                 try {
                     cleanInputDir();
                     moveBuildFile();
@@ -203,6 +218,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                         t.setDownloadUrl("http://qiniu.apppubs.com/" + apkPath);
                         t.setStatus(TTask.STATUS_SUCCESS);
                         baseMapper.updateById(t);
+                        notifyCallback(task.getReserve1(), task.getId(), t.getStatusStr(), "", t.getDownloadUrl());
                     }
 
                 } catch (Exception e) {
@@ -210,8 +226,9 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                     logger.error("{}", ExceptionUtils.getMessage(e), e);
                     TTask task1 = baseMapper.selectById(task.getId());
                     task1.setStatus(TTask.STATUS_FAIL);
-                    task1.setReserve5(ExceptionUtils.getMessage(e));
+                    task1.setNote(ExceptionUtils.getMessage(e));
                     baseMapper.updateById(task1);
+                    notifyCallback(task.getReserve1(), task.getId(), task1.getStatusStr(), task1.getNote(), "");
                 }
             }
         }
@@ -222,9 +239,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
         private void moveBuildFile() throws IOException {
             InputStream io = Thread.currentThread().getContextClassLoader().getResourceAsStream("android/build.gradle");
-
-//            File file = new ClassPathResource("android/build.gradle").getFile();
-            Files.copy(io, Paths.get(prebuildDir,"build.gradle"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(io, Paths.get(prebuildDir, "build.gradle"), StandardCopyOption.REPLACE_EXISTING);
         }
 
         private void createConfigFile(TTask task) throws IOException {
@@ -243,6 +258,20 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         TTask task = baseMapper.selectById(id);
         task.setStatus(status);
         baseMapper.updateById(task);
+    }
+
+    private void notifyCallback(String callback, Integer taskId, String status, String errMsg, String downloadURL) {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("taskId", taskId + "");
+        params.put("errMsg", errMsg);
+        params.put("status", status);
+        params.put("downloadURL", downloadURL);
+        try {
+            HttpUtil.sendPost(callback, params);
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+        }
     }
 
     private String buildFilename(String originalFilename) {
@@ -293,22 +322,11 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         TTask task = baseMapper.selectById(dto.getTaskId());
         CheckTaskVO vo = new CheckTaskVO();
         vo.setDownloadURL(task.getDownloadUrl());
-        String statusStr = "";
-        if (task.getStatus() == 1) {
-            statusStr = "building";
-        } else if (task.getStatus() == 2) {
-            statusStr = "done";
-        } else if (task.getStatus() == 3) {
-            statusStr = "failed";
-        } else if (task.getStatus() == 4) {
-            statusStr = "canceled";
-        } else {
-            statusStr = "waiting";
-        }
-        vo.setStatus(statusStr);
 
-        if ("failed".equals(statusStr)) {
-            vo.setErrMsg(task.getReserve5());
+        vo.setStatus(task.getStatusStr());
+
+        if ("failed".equals(task.getStatusStr())) {
+            vo.setErrMsg(task.getNote());
         }
         return vo;
     }
