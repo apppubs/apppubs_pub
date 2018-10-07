@@ -40,7 +40,7 @@ public class HttpUtil {
         wr.close();
         int responseCode = con.getResponseCode();
 
-        System.out.println("URL: " + url + "Response Code : " + responseCode);
+        System.out.println("URL: " + url + " Params" + sb.toString() + " Response Code : " + responseCode);
 
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));

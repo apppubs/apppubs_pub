@@ -45,9 +45,9 @@ mybatis:
 spring:
   profiles: dev
   datasource:
-    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
-    username: zhangwen
-    password: Heaven202
+    url: jdbc:mysql://apppubs.tpddns.cn:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
+    username: hingecloud
+    password: hingecloud2018
   servlet:
     multipart:
       max-file-size: 20MB
@@ -73,9 +73,9 @@ custom:
 spring:
   profiles: prod
   datasource:
-    url: jdbc:mysql://154.8.221.114:3306/apppubs_pub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true
-    username: zhangwen
-    password: Heaven202
+    url: jdbc:mysql://127.0.0.1:3306/apppubs_pub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true
+    username: hingecloud
+    password: hingecloud2018
   servlet:
       multipart:
         max-file-size: 20MB
