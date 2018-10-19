@@ -3,8 +3,9 @@ package com.hingecloud.apppubs.pub.model.config;
 import com.hingecloud.apppubs.pub.model.TTask;
 import com.hingecloud.apppubs.pub.utils.StringUtil;
 
-public class BuildData {
-    private String packageName;
+public class IOSBuildData {
+
+    private String bundleId;
     private String appName;
     private String wxAppId;
     private String appId;
@@ -12,32 +13,29 @@ public class BuildData {
     private String jpushAppKey;
     private String versionName;
     private String versionCode;
-    private String storePassword;
-    private String keyAlias;
-    private String keyPassword;
+    private String cerPassword;
 
-    public static BuildData createFromTask(TTask task) {
-        BuildData data = new BuildData();
-        data.setPackageName(task.getPackageName());
+
+    public static IOSBuildData createFromTask(TTask task) {
+        IOSBuildData data = new IOSBuildData();
+        data.setBundleId(task.getBundleId());
         data.setAppName(task.getAppName());
-        data.setWxAppId(StringUtil.getString(task.getWxAppId(), ""));
+        data.setWxAppId(task.getWxAppId());
         data.setAppId(task.getAppId());
         data.setBaseURL(task.getBaseUrl());
-        data.setJpushAppKey(StringUtil.getString(task.getJpushAppId(), ""));
+        data.setJpushAppKey(task.getJpushAppId());
         data.setVersionName(task.getVersionName());
         data.setVersionCode(task.getVersionCode() + "");
-        data.setStorePassword(task.getStorePassword());
-        data.setKeyAlias(task.getKeyAlias());
-        data.setKeyPassword(task.getKeyPassword());
+        data.setCerPassword(StringUtil.isEmpty(task.getCerPassword()) ? "1234" : task.getCerPassword());
         return data;
     }
 
-    public String getPackageName() {
-        return packageName;
+    public String getBundleId() {
+        return bundleId;
     }
 
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
+    public void setBundleId(String bundleId) {
+        this.bundleId = bundleId;
     }
 
     public String getAppName() {
@@ -96,27 +94,11 @@ public class BuildData {
         this.versionCode = versionCode;
     }
 
-    public String getStorePassword() {
-        return storePassword;
+    public String getCerPassword() {
+        return cerPassword;
     }
 
-    public void setStorePassword(String storePassword) {
-        this.storePassword = storePassword;
-    }
-
-    public String getKeyAlias() {
-        return keyAlias;
-    }
-
-    public void setKeyAlias(String keyAlias) {
-        this.keyAlias = keyAlias;
-    }
-
-    public String getKeyPassword() {
-        return keyPassword;
-    }
-
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
+    public void setCerPassword(String cerPassword) {
+        this.cerPassword = cerPassword;
     }
 }

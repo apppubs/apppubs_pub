@@ -1,5 +1,6 @@
 package com.hingecloud.apppubs.pub.model.dto;
 
+import com.hingecloud.apppubs.pub.model.TTask;
 import com.hingecloud.apppubs.pub.tools.ValidateHelper;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,18 +18,25 @@ public class CreateTaskDTO extends AbsDTO {
     private String keyAlias;
     private String keyPassword;
     private String callback;
+    private String iosBundleId;
+    private String iosCerPassword;
     private MultipartFile assets;
 
     @Override
     public void validate() {
-        ValidateHelper.notNull(getPackageName(), "packageName为空!");
         ValidateHelper.notNull(getAppName(), "appName为空！");
         ValidateHelper.notNull(getAppId(), "appId为空！");
         ValidateHelper.notNull(getBaseURL(), "baseURL为空！");
         ValidateHelper.notNull(getType(), "type为空！");
         ValidateHelper.notNull(getVersionName(), "versionName为空！");
         ValidateHelper.notNull(getAssets(), "assets为空！");
-        ValidateHelper.notNull(getCallback(),"callback为空！");
+        ValidateHelper.notNull(getCallback(), "callback为空！");
+        ValidateHelper.isTrue(TTask.TYPE_ANDROID.equals(type) || TTask.TYPE_IOS.equals(type), "类型type=" + type + " 错误（必须为android或者ios）");
+        if (type.equals(TTask.TYPE_ANDROID)) {
+            ValidateHelper.notNull(getPackageName(), "packageName为空!");
+        } else {
+            ValidateHelper.notBlank(getIosBundleId(), "bundleId 为空！");
+        }
     }
 
     public String getPackageName() {
@@ -133,5 +141,21 @@ public class CreateTaskDTO extends AbsDTO {
 
     public void setCallback(String callback) {
         this.callback = callback;
+    }
+
+    public String getIosBundleId() {
+        return iosBundleId;
+    }
+
+    public void setIosBundleId(String iosBundleId) {
+        this.iosBundleId = iosBundleId;
+    }
+
+    public String getIosCerPassword() {
+        return iosCerPassword;
+    }
+
+    public void setIosCerPassword(String iosCerPassword) {
+        this.iosCerPassword = iosCerPassword;
     }
 }

@@ -35,6 +35,7 @@ configurations {
 }
 
 dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-test')
     providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
@@ -54,5 +55,7 @@ dependencies {
     compile 'com.alibaba:druid:1.1.11'
     /* fastjson */
     compile 'com.alibaba:fastjson:1.2.49'
-    compile fileTree(dir:'libs',include:['*.jar'])
+    /* thumbnailator */
+    compile 'net.coobird:thumbnailator:0.4.8'
+
 }

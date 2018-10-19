@@ -36,9 +36,9 @@ public class MpGenerator {
         DataSourceConfig dsc = new DataSourceConfig();
         dsc.setDbType(DbType.MYSQL);
         dsc.setDriverName("com.mysql.cj.jdbc.Driver");
-        dsc.setUsername("zhangwen");
-        dsc.setPassword("Heaven202");
-        dsc.setUrl("jdbc:mysql://154.8.221.114:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong");
+        dsc.setUsername("hingecloud");
+        dsc.setPassword("hingecloud2018");
+        dsc.setUrl("jdbc:mysql://apppubs.tpddns.cn:3306/apppubs_pub?characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong");
         mpg.setDataSource(dsc);
 
         // 策略配置

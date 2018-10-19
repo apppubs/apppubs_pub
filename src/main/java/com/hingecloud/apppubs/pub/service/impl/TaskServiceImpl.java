@@ -1,6 +1,5 @@
 package com.hingecloud.apppubs.pub.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
@@ -11,15 +10,18 @@ import com.hingecloud.apppubs.pub.mapper.DicMapper;
 import com.hingecloud.apppubs.pub.mapper.TaskMapper;
 import com.hingecloud.apppubs.pub.model.TDic;
 import com.hingecloud.apppubs.pub.model.TTask;
-import com.hingecloud.apppubs.pub.model.config.BuildData;
 import com.hingecloud.apppubs.pub.model.dto.CancelTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CheckTaskDTO;
 import com.hingecloud.apppubs.pub.model.dto.CreateTaskDTO;
 import com.hingecloud.apppubs.pub.model.vo.CheckTaskVO;
 import com.hingecloud.apppubs.pub.model.vo.CreateTaskVO;
 import com.hingecloud.apppubs.pub.service.TaskService;
+import com.hingecloud.apppubs.pub.service.impl.compile.CompileHandler;
+import com.hingecloud.apppubs.pub.service.impl.compile.CompileHandlerFactory;
+import com.hingecloud.apppubs.pub.service.impl.compile.HandlerConfiguration;
+import com.hingecloud.apppubs.pub.tools.QiniuHelper;
 import com.hingecloud.apppubs.pub.utils.DateUtil;
-import com.hingecloud.apppubs.pub.utils.FileHelper;
+import com.hingecloud.apppubs.pub.utils.GradleUtils;
 import com.hingecloud.apppubs.pub.utils.HttpUtil;
 import com.qiniu.common.QiniuException;
 import com.qiniu.common.Zone;
@@ -28,11 +30,7 @@ import com.qiniu.storage.Configuration;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +39,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +76,12 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
     @Value("${custom.qiniu.bucket}")
     private String mBucket;
+
+    @Value("${custom.ios.resultPath}")
+    private String mIosResultPath;
+
+    @Value("${custom.ios.projectDir}")
+    private String mIosProjectDir;
 
     @Autowired
     private DicMapper mDicMapper;
@@ -122,6 +123,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
             task.setAssets(assetsPath);
             task.setVersionCode(latestVersionCode);
             task.setReserve1(dto.getCallback());
+            task.setCerPassword(dto.getIosCerPassword());
+            task.setBundleId(dto.getIosBundleId());
             baseMapper.add(task);
             if (!mTaskQueue.offer(task)) {
                 throw new CreateTaskException("编译队列已满，请稍后再试！");
@@ -172,7 +175,8 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         logger.info("打开任务处理器");
         //cleanup android项目
         try {
-            buildProject(androidProjectDir, "clean");
+            GradleUtils.buildProject(androidProjectDir, "clean");
+            GradleUtils.buildProject(mIosProjectDir,"clean");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -204,18 +208,26 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
                 notifyCallback(task.getReserve1(), task.getId(), task.getStatusStr(), "", "");
                 try {
-                    cleanInputDir();
-                    moveBuildFile();
-                    moveAssets(task.getAssets());
-                    createConfigFile(task);
-                    buildProject(prebuildDir, "resolveSource");
-                    buildProject(androidProjectDir, "packageRelease");
+                    HandlerConfiguration conf = new HandlerConfiguration();
+                    conf.setAndroidPreBuildDir(prebuildDir);
+                    conf.setAndroidProjectDir(androidProjectDir);
+                    conf.setAndroidResultPath(androidResultPath);
+                    conf.setIosProjectDir(mIosProjectDir);
+                    CompileHandler handler = new CompileHandlerFactory(conf).getHandler(task.getType());
+                    handler.packageRelease(task);
 
                     TTask t = baseMapper.selectById(task.getId());
                     if (t.getStatus() != TTask.STATUS_CANCEL) {
-                        String apkPath = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".apk";
-                        uploadFile(androidResultPath, apkPath);
-                        t.setDownloadUrl("http://qiniu.apppubs.com/" + apkPath);
+                        QiniuHelper qnHelper = new QiniuHelper(mAccessKey, mSecretKey, mBucket);
+                        String resultKey = null;
+                        if (TTask.TYPE_ANDROID.equals(t.getType())) {
+                            resultKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".apk";
+                            qnHelper.uploadFile(androidResultPath, resultKey);
+                        } else {
+                            resultKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".ipa";
+                            qnHelper.uploadFile(mIosResultPath, resultKey);
+                        }
+                        t.setDownloadUrl("http://qiniu.apppubs.com/" + resultKey);
                         t.setStatus(TTask.STATUS_SUCCESS);
                         baseMapper.updateById(t);
                         notifyCallback(task.getReserve1(), task.getId(), t.getStatusStr(), "", t.getDownloadUrl());
@@ -231,26 +243,6 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                     notifyCallback(task.getReserve1(), task.getId(), task1.getStatusStr(), task1.getNote(), "");
                 }
             }
-        }
-
-        private void cleanInputDir() {
-            FileHelper.delFolder(Paths.get(prebuildDir, "input").toString());
-        }
-
-        private void moveBuildFile() throws IOException {
-            InputStream io = Thread.currentThread().getContextClassLoader().getResourceAsStream("android/build.gradle");
-            Files.copy(io, Paths.get(prebuildDir, "build.gradle"), StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        private void createConfigFile(TTask task) throws IOException {
-            BuildData data = BuildData.createFromTask(task);
-            String jsonStr = JSON.toJSONString(data);
-            ByteInputStream bis = new ByteInputStream(jsonStr.getBytes(), 0, jsonStr.getBytes().length);
-            Files.copy(bis, Paths.get(prebuildDir, "input", "config.json"));
-        }
-
-        private void moveAssets(String assetsPath) throws IOException {
-            FileHelper.decompressZip(new File(assetsPath), Paths.get(prebuildDir, "input").toString());
         }
     }
 
@@ -277,44 +269,6 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
     private String buildFilename(String originalFilename) {
         String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
         return UUID.randomUUID().toString().replaceAll("-", "") + suffix;
-    }
-
-    public boolean buildProject(String buildPath, String... tasks) throws Exception {
-        File buildFile = new File(buildPath);
-        GradleConnector connector = GradleConnector.newConnector();
-        connector.forProjectDirectory(buildFile);
-        ProjectConnection connection = connector.connect();
-        BuildLauncher build = connection.newBuild();
-        build.forTasks(tasks);
-        build.setStandardOutput(System.out);
-        try {
-            build.run();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception(e.getMessage());
-        } finally {
-            connection.close();
-        }
-        return true;
-    }
-
-    private void uploadFile(String localFilePath, String key) throws QiniuException {
-        Configuration cfg = new Configuration(Zone.zone0());
-        UploadManager uploadManager = new UploadManager(cfg);
-
-        //默认不指定key的情况下，以文件内容的hash值作为文件名
-        String upToken = getAccessToken();
-        Response response = uploadManager.put(localFilePath, key, upToken);
-        //解析上传成功的结果
-        DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
-        System.out.println(putRet.key);
-        System.out.println(putRet.hash);
-    }
-
-    private String getAccessToken() {
-        Auth auth = Auth.create(mAccessKey, mSecretKey);
-        String upToken = auth.uploadToken(mBucket);
-        return upToken;
     }
 
     @Override

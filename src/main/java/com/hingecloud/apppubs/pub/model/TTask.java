@@ -32,6 +32,7 @@ public class TTask implements Serializable {
     public static final String TYPE_IOS = "ios";
 
 
+
     @TableId(value="id", type= IdType.AUTO)
     private Integer id;
     @TableField("app_id")
@@ -56,7 +57,7 @@ public class TTask implements Serializable {
     private Integer enableSplashSkip;
     @TableField("enable_start_up_version")
     private Integer enableStartUpVersion;
-    private Integer status = STATUS_WAITING;
+    private Integer status;
     @TableField("create_time")
     private Date createTime;
     @TableField("download_url")
@@ -67,6 +68,10 @@ public class TTask implements Serializable {
     private String keyAlias;
     @TableField("key_password")
     private String keyPassword;
+    @TableField("bundle_id")
+    private String bundleId;
+    @TableField("cer_password")
+    private String cerPassword;
     private String note;
     private String reserve1;
     private String reserve2;
@@ -227,6 +232,22 @@ public class TTask implements Serializable {
         this.keyPassword = keyPassword;
     }
 
+    public String getBundleId() {
+        return bundleId;
+    }
+
+    public void setBundleId(String bundleId) {
+        this.bundleId = bundleId;
+    }
+
+    public String getCerPassword() {
+        return cerPassword;
+    }
+
+    public void setCerPassword(String cerPassword) {
+        this.cerPassword = cerPassword;
+    }
+
     public String getNote() {
         return note;
     }
@@ -297,6 +318,8 @@ public class TTask implements Serializable {
                 ", storePassword=" + storePassword +
                 ", keyAlias=" + keyAlias +
                 ", keyPassword=" + keyPassword +
+                ", bundleId=" + bundleId +
+                ", cerPassword=" + cerPassword +
                 ", note=" + note +
                 ", reserve1=" + reserve1 +
                 ", reserve2=" + reserve2 +
@@ -305,7 +328,6 @@ public class TTask implements Serializable {
                 ", reserve5=" + reserve5 +
                 "}";
     }
-
     public String getStatusStr(){
         String statusStr = "";
         if (getStatus() == 1) {
