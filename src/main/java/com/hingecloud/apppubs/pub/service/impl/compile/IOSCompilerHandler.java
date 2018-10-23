@@ -53,36 +53,36 @@ public class IOSCompilerHandler implements CompileHandler {
 
     private void copyIcon() throws IOException {
         AppIconContents content = new AppIconContents();
-        content.addImage(createPNG(1024, "ios-marketing", "Icon-marketing.png", 1));
-        content.addImage(createPNG(20, "iphone", "Icon-Notification@2x.png", 2));
-        content.addImage(createPNG(20, "iphone", "Icon-Notification@3x.png", 3));
-        content.addImage(createPNG(29, "iphone", "Icon-Small@2x.png", 2));
-        content.addImage(createPNG(29, "iphone", "Icon-Small@3x.png", 3));
-        content.addImage(createPNG(40, "iphone", "Icon-Small-40@2x.png", 2));
-        content.addImage(createPNG(40, "iphone", "Icon-Small-40@3x.png", 3));
-        content.addImage(createPNG(60, "iphone", "Icon-60@2x.png", 2));
-        content.addImage(createPNG(60, "iphone", "Icon-60@3x.png", 3));
-        content.addImage(createPNG(20, "ipad", "Icon-Notification.png", 1));
-        content.addImage(createPNG(20, "ipad", "Icon-Notification@2x.png", 2));
-        content.addImage(createPNG(29, "ipad", "Icon-Small.png", 1));
-        content.addImage(createPNG(29, "ipad", "Icon-Small@2x.png", 2));
-        content.addImage(createPNG(40, "ipad", "Icon-Small-40.png", 1));
-        content.addImage(createPNG(40, "ipad", "Icon-Small-40@2x.png", 2));
-        content.addImage(createPNG(76, "ipad", "Icon-76.png", 1));
-        content.addImage(createPNG(76, "ipad", "Icon-76@2x.png", 2));
-        content.addImage(createPNG(83.5f, "ipad", "Icon-83.5@2x.png", 2));
+        content.addImage(createPNG("1024", "ios-marketing", "Icon-marketing.png", 1));
+        content.addImage(createPNG("20", "iphone", "Icon-Notification@2x.png", 2));
+        content.addImage(createPNG("20", "iphone", "Icon-Notification@3x.png", 3));
+        content.addImage(createPNG("29", "iphone", "Icon-Small@2x.png", 2));
+        content.addImage(createPNG("29", "iphone", "Icon-Small@3x.png", 3));
+        content.addImage(createPNG("40", "iphone", "Icon-Small-40@2x.png", 2));
+        content.addImage(createPNG("40", "iphone", "Icon-Small-40@3x.png", 3));
+        content.addImage(createPNG("60", "iphone", "Icon-60@2x.png", 2));
+        content.addImage(createPNG("60", "iphone", "Icon-60@3x.png", 3));
+        content.addImage(createPNG("20", "ipad", "Icon-Notification.png", 1));
+        content.addImage(createPNG("20", "ipad", "Icon-Notification@2x.png", 2));
+        content.addImage(createPNG("29", "ipad", "Icon-Small.png", 1));
+        content.addImage(createPNG("29", "ipad", "Icon-Small@2x.png", 2));
+        content.addImage(createPNG("40", "ipad", "Icon-Small-40.png", 1));
+        content.addImage(createPNG("40", "ipad", "Icon-Small-40@2x.png", 2));
+        content.addImage(createPNG("76", "ipad", "Icon-76.png", 1));
+        content.addImage(createPNG("76", "ipad", "Icon-76@2x.png", 2));
+        content.addImage(createPNG("83.5", "ipad", "Icon-83.5@2x.png", 2));
         String jsonStr = JSON.toJSONString(content);
         ByteInputStream bis = new ByteInputStream(jsonStr.getBytes(), 0, jsonStr.getBytes().length);
         Files.copy(bis, Paths.get(mProjectDir, "pub", "AppIcon.appiconset", "Contents.json"));
     }
 
-    private AppIconContentsItem createPNG(float sideLength, String idiom, String filename, int scale) throws IOException {
+    private AppIconContentsItem createPNG(String sideLength, String idiom, String filename, int scale) throws IOException {
         File originalFile = Paths.get(mProjectDir, "pub", "icon.png").toFile();
         File appIconDir = Paths.get(mProjectDir, "pub", "AppIcon.appiconset").toFile();
         if (!appIconDir.exists()) {
             appIconDir.mkdirs();
         }
-        int realLength = (int) (sideLength*scale);
+        int realLength = (int) (Float.valueOf(sideLength)*scale);
         Thumbnails.of(originalFile)
                 .size(realLength, realLength)
                 .outputFormat("png").toFile(Paths.get(mProjectDir, "pub", "AppIcon.appiconset", filename).toFile());
@@ -90,7 +90,7 @@ public class IOSCompilerHandler implements CompileHandler {
         item.setFilename(filename);
         item.setIdiom(idiom);
         item.setScale(String.format("%dx", scale));
-        item.setSize(String.format("%d*%d", realLength, realLength));
+        item.setSize(String.format("%sx%s", sideLength, sideLength));
         return item;
     }
 

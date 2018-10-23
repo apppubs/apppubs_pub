@@ -71,6 +71,7 @@ custom:
     accessKey: b_P-P5_--nAnU9opyjTJb37aYpkvt66Dq8aZH7nw
     secretKey: mSVLjokAPleEttwgY79fxIrSPakVSMfn6rCCFwpf
     bucket: apppubs
+    domain: https://qiniu.apppubs.com/
 
 ---
 #生产环境
@@ -96,10 +97,11 @@ custom:
     projectDir: /Users/hingesoft/Desktop/build/apppubs-android/apppubs-android/
     resultPath: /Users/hingesoft/Desktop/build/apppubs-android/apppubs-android/mportal/build/outputs/apk/release/mportal-release.apk
   ios:
-    projectDir: /Users/hingesoft/Desktop/build/apppubs-ios/wmh/
-    pubsourceDir: /Users/hingesoft/Desktop/build/apppubs-ios/wmh/pub/
-    resultPath: /Users/hingesoft/Desktop/build/apppubs-ios/wmh/build/package/apppubs-release.ipa
+    projectDir: /Users/hingesoft/Desktop/build/apppubs-ios/
+    pubsourceDir: /Users/hingesoft/Desktop/build/apppubs-ios/pub/
+    resultPath: /Users/hingesoft/Desktop/build/apppubs-ios/build/package/apppubs-release.ipa
   qiniu:
     accessKey: b_P-P5_--nAnU9opyjTJb37aYpkvt66Dq8aZH7nw
     secretKey: mSVLjokAPleEttwgY79fxIrSPakVSMfn6rCCFwpf
     bucket: apppubs
+    domain: https://qiniu.apppubs.com/

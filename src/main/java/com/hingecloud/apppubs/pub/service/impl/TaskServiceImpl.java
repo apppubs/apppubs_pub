@@ -3,7 +3,6 @@ package com.hingecloud.apppubs.pub.service.impl;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
-import com.google.gson.Gson;
 import com.hingecloud.apppubs.pub.exception.CreateTaskException;
 import com.hingecloud.apppubs.pub.exception.GlobalExceptionHandler;
 import com.hingecloud.apppubs.pub.mapper.DicMapper;
@@ -21,15 +20,10 @@ import com.hingecloud.apppubs.pub.service.impl.compile.CompileHandlerFactory;
 import com.hingecloud.apppubs.pub.service.impl.compile.HandlerConfiguration;
 import com.hingecloud.apppubs.pub.tools.QiniuHelper;
 import com.hingecloud.apppubs.pub.utils.DateUtil;
+import com.hingecloud.apppubs.pub.utils.FileHelper;
 import com.hingecloud.apppubs.pub.utils.GradleUtils;
 import com.hingecloud.apppubs.pub.utils.HttpUtil;
-import com.qiniu.common.QiniuException;
-import com.qiniu.common.Zone;
-import com.qiniu.http.Response;
-import com.qiniu.storage.Configuration;
-import com.qiniu.storage.UploadManager;
-import com.qiniu.storage.model.DefaultPutRet;
-import com.qiniu.util.Auth;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +33,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 @Service
@@ -85,6 +77,9 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
 
     @Autowired
     private DicMapper mDicMapper;
+
+    @Value("${custom.qiniu.domain}")
+    private String mDomain;
 
     private ArrayBlockingQueue<TTask> mTaskQueue = new ArrayBlockingQueue(MAX_TASK_SIZE, true);
 
@@ -176,7 +171,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
         //cleanup android项目
         try {
             GradleUtils.buildProject(androidProjectDir, "clean");
-            GradleUtils.buildProject(mIosProjectDir,"clean");
+            GradleUtils.buildProject(mIosProjectDir, "clean");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -224,10 +219,29 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, TTask> implements T
                             resultKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".apk";
                             qnHelper.uploadFile(androidResultPath, resultKey);
                         } else {
-                            resultKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".ipa";
-                            qnHelper.uploadFile(mIosResultPath, resultKey);
+                            resultKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".plist";
+                            String ipaKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".ipa";
+                            String pngPath = mIosProjectDir + "/pub/AppIcon.appiconset/" + "Icon-Small-40@3x.png";
+                            String pngKey = task.getAppId() + "/v" + task.getVersionName() + "_" + task.getVersionCode() + ".png";
+                            //上传ipa
+                            qnHelper.uploadFile(mIosResultPath, ipaKey);
+                            //上传png
+                            qnHelper.uploadFile(pngPath, pngKey);
+                            //制作manifest
+                            InputStream io = Thread.currentThread().getContextClassLoader().getResourceAsStream("ios/manifest_template.plist");
+
+                            String manifestTemplate = FileHelper.convertStreamToString(io);
+                            manifestTemplate = manifestTemplate.replace("${app_url}", mDomain + ipaKey)
+                                    .replace("${display_image}", mDomain + pngKey)
+                                    .replace("${full_size_image}", mDomain + pngKey)
+                                    .replace("${bundle_identifer}", task.getBundleId())
+                                    .replace("${subtitle}", task.getAppName())
+                                    .replace("${title}", task.getAppName());
+                            byte[] templateBytes = manifestTemplate.getBytes();
+                            Files.copy(new ByteInputStream(templateBytes, templateBytes.length), Paths.get(mIosProjectDir, "pub", "manifest.plist"), StandardCopyOption.REPLACE_EXISTING);
+                            qnHelper.uploadFile(Paths.get(mIosProjectDir, "pub", "manifest.plist").toString(), resultKey);
                         }
-                        t.setDownloadUrl("http://qiniu.apppubs.com/" + resultKey);
+                        t.setDownloadUrl(mDomain + resultKey);
                         t.setStatus(TTask.STATUS_SUCCESS);
                         baseMapper.updateById(t);
                         notifyCallback(task.getReserve1(), task.getId(), t.getStatusStr(), "", t.getDownloadUrl());
