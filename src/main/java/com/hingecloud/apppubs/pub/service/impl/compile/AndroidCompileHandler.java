@@ -6,6 +6,7 @@ import com.hingecloud.apppubs.pub.model.config.AndroidBuildData;
 import com.hingecloud.apppubs.pub.utils.FileHelper;
 import com.hingecloud.apppubs.pub.utils.GradleUtils;
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import net.coobird.thumbnailator.Thumbnails;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class AndroidCompileHandler implements CompileHandler {
 
     private String mAndroidProjectDir;
 
-    public AndroidCompileHandler(String prebuildDir,String projectDir){
+    public AndroidCompileHandler(String prebuildDir, String projectDir) {
         mPrebuildDir = prebuildDir;
         mAndroidProjectDir = projectDir;
     }
@@ -32,6 +33,7 @@ public class AndroidCompileHandler implements CompileHandler {
         moveBuildFile();
         moveAssets(task.getAssets());
         createConfigFile(task);
+        createIcons();
         GradleUtils.buildProject(mPrebuildDir, "resolveSource");
         GradleUtils.buildProject(mAndroidProjectDir, "packageRelease");
     }
@@ -45,6 +47,31 @@ public class AndroidCompileHandler implements CompileHandler {
         Files.copy(io, Paths.get(mPrebuildDir, "build.gradle"), StandardCopyOption.REPLACE_EXISTING);
     }
 
+    private void moveAssets(String assetsPath) throws IOException {
+        FileHelper.decompressZip(new File(assetsPath), Paths.get(mPrebuildDir, "input").toString());
+    }
+
+    private void createIcons() throws IOException {
+        createIcon(192, "xxxhdpi");
+        createIcon(144, "xxhdpi");
+        createIcon(96, "xhdpi");
+        createIcon(72, "hdpi");
+        createIcon(48, "mdpi");
+        createIcon(36, "ldpi");
+    }
+
+    private void createIcon(int lengthOfSlide, String dir) throws IOException {
+        File mataIcon = Paths.get(mPrebuildDir, "input", "icon.png").toFile();
+        File desDir = Paths.get(mPrebuildDir, "input", "icons", dir).toFile();
+        if (!desDir.exists()) {
+            desDir.mkdirs();
+        }
+        Thumbnails.of(mataIcon)
+                .size(lengthOfSlide, lengthOfSlide)
+                .allowOverwrite(true)
+                .outputFormat("png").toFile(Paths.get(desDir.getAbsolutePath(), "icon.png").toFile());
+    }
+
     private void createConfigFile(TTask task) throws IOException {
         AndroidBuildData data = AndroidBuildData.createFromTask(task);
         String jsonStr = JSON.toJSONString(data);
@@ -52,7 +79,4 @@ public class AndroidCompileHandler implements CompileHandler {
         Files.copy(bis, Paths.get(mPrebuildDir, "input", "config.json"));
     }
 
-    private void moveAssets(String assetsPath) throws IOException {
-        FileHelper.decompressZip(new File(assetsPath), Paths.get(mPrebuildDir, "input").toString());
-    }
 }

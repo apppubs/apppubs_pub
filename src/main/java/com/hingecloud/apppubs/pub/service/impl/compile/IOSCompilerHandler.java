@@ -30,6 +30,7 @@ public class IOSCompilerHandler implements CompileHandler {
         cleanPubDir();
         decompressAssets(task.getAssets());
         createConfigFile(task);
+        GradleUtils.buildProject(mProjectDir, "moveAssets");
         GradleUtils.buildProject(mProjectDir, "packageRelease");
     }
 

@@ -62,32 +62,32 @@ task resolveSource<<{
     }
     copy {
         println "拷贝xxxhdpi"
-        from file('input/icon/xxxhdpi/icon.png')
+        from file('input/icons/xxxhdpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-xxxhdpi/')
     }
     copy {
         println "拷贝xxhdpi"
-        from file('input/icon/xxhdpi/icon.png')
+        from file('input/icons/xxhdpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-xxhdpi/')
     }
     copy {
         println "拷贝xhdpi"
-        from file('input/icon/xhdpi/icon.png')
+        from file('input/icons/xhdpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-xhdpi/')
     }
     copy {
         println "拷贝hdpi"
-        from file('input/icon/hdpi/icon.png')
+        from file('input/icons/hdpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-hdpi/')
     }
     copy {
         println "拷贝mdpi"
-        from file('input/icon/mdpi/icon.png')
+        from file('input/icons/mdpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-mdpi/')
     }
     copy {
         println "拷贝ldpi"
-        from file('input/icon/ldpi/icon.png')
+        from file('input/icons/ldpi/icon.png')
         into file('apppubs-android/mportal/src/main/res/drawable-ldpi/')
     }
 
